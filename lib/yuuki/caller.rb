@@ -5,7 +5,7 @@ require 'yuuki/runner'
 
 module Yuuki
   class Caller
-    def self.require_dir(_dir, recursive: false)
+    def self.require_dir(require_dir, recursive: false)
       Dir.glob(recursive ? "#{require_dir}/**/*.rb" : "#{require_dir}/*.rb"){|file| require file}
     end
 
