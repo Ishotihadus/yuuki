@@ -20,7 +20,28 @@ Or install it yourself as:
 
 ## Usage
 
-あとで書く。
+```ruby
+class HogeClass
+  add :a
+  def a
+    puts 'a'
+  end
+
+  add :b
+  tag :b, :tag_b
+  def b
+    puts 'b'
+  end
+end
+
+yuuki = Yuuki::Caller.new(HogeClass)
+yuuki.run
+# a
+# b
+
+yuuki.run_tag(:tag_b)
+# b
+```
 
 ## Contributing
 
