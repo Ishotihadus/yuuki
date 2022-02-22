@@ -5,23 +5,33 @@ require 'yuuki/runner'
 
 module Yuuki
   module Runner
-    # set interval to the method
-    def periodic(method, interval)
+    # sets interval to the method
+    # @param [Symbol] methods method names
+    # @param [Integer] interval
+    def periodic(*methods, interval)
       @yuuki_methods ||= {}
-      @yuuki_methods[method] ||= {}
-      @yuuki_methods[method][:periodic] = interval
+      methods.each do |method|
+        @yuuki_methods[method] ||= {}
+        @yuuki_methods[method][:periodic] = interval
+      end
     end
 
-    # set whether the method run at the first time
-    def first_run(method, enabled: true)
+    # sets whether the method run at the first time
+    # @param [Symbol] methods method names
+    # @param [Boolean] enabled
+    def first_run(*methods, enabled: true)
       @yuuki_methods ||= {}
-      @yuuki_methods[method] ||= {}
-      @yuuki_methods[method][:first_run] = enabled
+      methods.each do |method|
+        @yuuki_methods[method] ||= {}
+        @yuuki_methods[method][:first_run] = enabled
+      end
     end
   end
 end
 
 module Yuuki
+  # @attr_reader [Boolean] first_run
+  # @attr_reader [Float] current_time
   class PeriodicCaller < Caller
     attr_reader :first_run, :current_time
 
@@ -30,10 +40,16 @@ module Yuuki
       @first_run = true
     end
 
+    # sets error callback
+    # @yield [error]
+    # @yieldparam [Exception] error
     def on_error(&block)
       @on_error = block
     end
 
+    # runs the periodic caller
+    # @param [Numeric] gmtoff GMT Offset
+    # @param [Object] args arguments
     def run(gmtoff = Time.now.gmtoff, **args, &block)
       last_time = nil
       loop do

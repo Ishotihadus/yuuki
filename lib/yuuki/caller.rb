@@ -5,16 +5,22 @@ require 'yuuki/runner'
 
 module Yuuki
   class Caller
+    # requires all the rb files in the given directory
+    # @param [String] require_dir directory
+    # @param [Boolean] recursive
     def self.require_dir(require_dir, recursive: false)
       Dir.glob(recursive ? "#{require_dir}/**/*.rb" : "#{require_dir}/*.rb"){|file| require file}
     end
 
+    # @param [Object] instances
     def initialize(*instances)
       @instances = Set.new
       @threads = []
       add(*instances)
     end
 
+    # adds instances to yuuki
+    # @param [Object] instances
     def add(*instances)
       instances.each do |instance|
         # create instance if class is given
@@ -36,6 +42,8 @@ module Yuuki
       end
     end
 
+    # returns runners
+    # @return [Array<[Method, Hash<Symbol, Object>]>]
     def runners
       list = @instances.flat_map do |instance|
         methods = instance.class.instance_variable_get(:@yuuki_methods)
@@ -44,18 +52,30 @@ module Yuuki
       list.sort_by{|_method, meta| -(meta[:priority] || 0)}
     end
 
+    # runs all methods
+    # @param [Object] args arguments
     def run(**args, &block)
       run_internal(runners, args, &block)
     end
 
+    # runs all selected methods
+    # @param [Proc] proc_select
+    # @param [Object] args arguments
     def run_select(proc_select, **args, &block)
       run_internal(runners.select(&proc_select), args, &block)
     end
 
+    # runs all methods with the specified tags
+    # @param [Symbol] tags
+    # @param [Object] args arguments
     def run_tag(*tags, **args, &block)
       run_select(proc{|_method, meta| meta[:tags]&.intersect?(tags)}, **args, &block)
     end
 
+    # runs the specific method
+    # @param [Class, nil] klass
+    # @param [Symbol, nil] method_sig method name
+    # @param [Object] args arguments
     def run_method(klass, method_sig, **args, &block)
       select_proc = proc do |method, _meta|
         flag_klass = klass ? method.receiver.instance_of?(klass) : true
@@ -65,11 +85,14 @@ module Yuuki
       run_select(select_proc, **args, &block)
     end
 
+    # joins all runnning threads
     def join
       @threads.each(&:join)
       @threads.select!(&:alive?)
     end
 
+    # returns whether any thread is alive
+    # @return [Boolean]
     def alive?
       @threads.select!(&:alive?)
       !@threads.empty?
