@@ -1,0 +1,7 @@
+# TypeProf 0.21.2
+
+# Classes
+module Yuuki
+  class Error < StandardError
+  end
+end

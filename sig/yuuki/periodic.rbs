@@ -1,0 +1,19 @@
+# TypeProf 0.21.2
+
+# Classes
+module Yuuki
+  module Runner
+    def periodic: (Symbol method, Integer interval) -> void
+    def first_run: (Symbol method, ?enabled: bool) -> void
+  end
+
+  class PeriodicCaller < Caller
+    @on_error: Proc
+
+    attr_reader first_run: bool
+    attr_reader current_time: Float
+    def initialize: (*untyped instances) -> void
+    def on_error: {(Exception) -> void} -> void
+    def run: (?Integer gmtoff, **untyped) -> void
+  end
+end

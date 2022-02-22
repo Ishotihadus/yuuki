@@ -1,0 +1,25 @@
+# TypeProf 0.21.2
+
+# Classes
+module Yuuki
+  class Caller
+    @instances: Set[untyped]
+    @threads: Array[Thread]
+
+    def self.require_dir: (String require_dir, ?recursive: bool) -> void
+    def initialize: (*untyped instances) -> void
+    def add: (*untyped instances) -> void
+    def runners: -> Array[untyped]
+    def run: (**untyped) -> void
+    def run_select: (^(Method, Hash[Symbol, untyped]) -> bool proc_select, **untyped) -> void
+    def run_tag: (*Symbol tags, **untyped) -> void
+    def run_method: (Class klass, Symbol method_sig, **untyped) -> void
+    def join: -> void
+    def alive?: -> bool
+    alias running? alive?
+
+    private
+    def run_internal: (Array[untyped] runners, Hash[Symbol, untyped] args) -> void
+    def run_method_internal: (Method method, Hash[Symbol, untyped] args) -> void
+  end
+end

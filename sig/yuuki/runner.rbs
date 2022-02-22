@@ -1,0 +1,14 @@
+# TypeProf 0.21.2
+
+# Classes
+module Yuuki
+  module Runner
+    @yuuki_methods: Hash[Symbol, Hash[Symbol, untyped]]
+
+    def add: (*Symbol methods) -> void
+    def delete: (*Symbol methods) -> void
+    def tag: (Symbol method, *Symbol tags) -> void
+    def thread: (*Symbol methods, ?enabled: bool) -> void
+    def priority: (*Symbol methods, Numeric priority) -> void
+  end
+end
