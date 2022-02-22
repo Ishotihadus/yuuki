@@ -21,7 +21,11 @@ Or install it yourself as:
 ## Usage
 
 ```ruby
+require 'yuuki'
+
 class HogeClass
+  extend Yuuki::Runner
+
   add :a
   def a
     puts 'a'
