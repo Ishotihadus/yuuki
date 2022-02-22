@@ -11,7 +11,7 @@ module Yuuki
       @yuuki_methods[method] ||= {}
       @yuuki_methods[method][:periodic] = interval
     end
-    
+
     # set whether the method run at the first time
     def first_run(method, enabled: true)
       @yuuki_methods ||= {}
