@@ -26,16 +26,17 @@ module Yuuki
         # create instance if class is given
         if instance.is_a?(Class)
           klass = instance
-          instance = instance.new
+          # check the klass is extended
+          raise Yuuki::Error, 'Runner instance must be extend Yuuki::Runner' unless klass.singleton_class.include?(Yuuki::Runner)
+          instance = instance.allocate
+          instance.instance_variable_set(:@yuuki, self)
+          instance.send(:initialize)
         else
-          klass = instance.class
+          # check the klass is extended
+          raise Yuuki::Error, 'Runner instance must be extend Yuuki::Runner' unless instance.class.singleton_class.include?(Yuuki::Runner)
+          # add @yuuki to the instance
+          instance.instance_variable_set(:@yuuki, self)
         end
-
-        # check the klass is extended
-        raise Yuuki::Error, 'Runner instance must be extend Yuuki::Runner' unless klass.singleton_class.include?(Yuuki::Runner)
-
-        # add @yuuki to the instance
-        instance.instance_variable_set(:@yuuki, self)
 
         # regist
         @instances << instance
