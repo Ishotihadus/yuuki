@@ -87,7 +87,11 @@ module Yuuki
     # @param [Object] args arguments
     def run_tag(*tags, **args, &block)
       t = self.tags
-      tags.each{|e| raise Yuuki::Error, "tag `#{e}` is not associated" unless t.include?(e)} unless @ignore_tag_error
+      tags.each do |e|
+        next if t.include?(e)
+        raise Yuuki::Error, "tag `#{e}` is not associated" unless @ignore_tag_error
+        warn "Yuuki Warning: tag `#{e}` is not associated"
+      end
       run_select(proc{|_method, meta| meta[:tags]&.intersect?(tags)}, **args, &block)
     end
 
