@@ -87,6 +87,6 @@ class UsaminTest < Minitest::Test
   end
 
   def test_tags
-    @yuuki.tags == %i[tag_b tag_g]
+    assert_equal(@yuuki.tags, Set[:tag_b, :tag_g])
   end
 end
