@@ -77,10 +77,17 @@ module Yuuki
       run_internal(runners.select(&proc_select), args, &block)
     end
 
+    # set whether to ignore ``tag not associated'' error
+    def ignore_tag_error(enabled: true)
+      @ignore_tag_error = enabled
+    end
+
     # runs all methods with the specified tags
     # @param [Symbol] tags
     # @param [Object] args arguments
     def run_tag(*tags, **args, &block)
+      t = self.tags
+      tags.each{|e| raise Yuuki::Error, "tag `#{e}` is not associated" unless t.include?(e)} unless @ignore_tag_error
       run_select(proc{|_method, meta| meta[:tags]&.intersect?(tags)}, **args, &block)
     end
 
