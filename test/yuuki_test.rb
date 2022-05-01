@@ -85,4 +85,8 @@ class UsaminTest < Minitest::Test
     @yuuki.run_tag(:tag_g)
     assert_equal(@instance.test, %i[g b])
   end
+
+  def test_tags
+    @yuuki.tags == %i[tag_b tag_g]
+  end
 end

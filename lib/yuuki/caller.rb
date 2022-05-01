@@ -53,6 +53,14 @@ module Yuuki
       list.sort_by{|_method, meta| -(meta[:priority] || 0)}
     end
 
+    # returns all tags defined
+    def tags
+      @instances.flat_map do |instance|
+        methods = instance.class.instance_variable_get(:@yuuki_methods)
+        methods.select{|_sig, meta| meta[:enabled]}.flat_map{|_sig, meta| meta[:tags]}
+      end
+    end
+
     # runs all methods
     # @param [Object] args arguments
     def run(**args, &block)
