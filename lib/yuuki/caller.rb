@@ -149,10 +149,10 @@ module Yuuki
     end
 
     def run_method_internal(method, args, &block)
+      yoshinon = Yoshinon.lock if @use_yoshinon
       params = method.parameters
       return method[] if params.empty?
 
-      yoshinon = Yoshinon.lock if @use_yoshinon
       params_array = []
       params_hash = {}
       params_block = nil
