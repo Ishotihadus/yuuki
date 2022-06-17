@@ -2,6 +2,7 @@
 
 require 'set'
 require 'yuuki/runner'
+require 'yoshinon'
 
 module Yuuki
   class Caller
@@ -13,7 +14,7 @@ module Yuuki
     end
 
     # @param [Object] instances
-    def initialize(*instances, use_yoshinon: false)
+    def initialize(*instances, use_yoshinon: true)
       @instances = Set.new
       @threads = []
       add(*instances)
@@ -151,6 +152,7 @@ module Yuuki
       params = method.parameters
       return method[] if params.empty?
 
+      yoshinon = Yoshinon.lock if @use_yoshinon
       params_array = []
       params_hash = {}
       params_block = nil
@@ -210,5 +212,7 @@ module Yuuki
       params_block = block unless params.any? {|type, _| type == :block}
       params_hash.empty? ? method[*params_array, &params_block] : method[*params_array, **params_hash, &params_block]
     end
+  ensure
+    yoshinon&.unlock if @use_yoshinon
   end
 end

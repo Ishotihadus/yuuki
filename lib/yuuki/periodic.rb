@@ -2,6 +2,7 @@
 
 require 'yuuki/caller'
 require 'yuuki/runner'
+require 'yoshinon'
 
 module Yuuki
   module Runner
@@ -35,7 +36,7 @@ module Yuuki
   class PeriodicCaller < Caller
     attr_reader :first_run, :current_time
 
-    def initialize(*instances)
+    def initialize(*instances, use_yoshinon: true)
       super
       @first_run = true
     end
@@ -62,7 +63,7 @@ module Yuuki
 
             c = @current_time + gmtoff
             l = last_time + gmtoff
-            next true if (l.div(meta[:periodic]) + 1) * meta[:periodic] <= c
+            (l.div(meta[:periodic]) + 1) * meta[:periodic] <= c
           end
           run_select(select_proc, **args, &block)
         rescue StandardError

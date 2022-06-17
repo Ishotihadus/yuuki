@@ -53,7 +53,7 @@ class TestClass
   end
 end
 
-class UsaminTest < Minitest::Test
+class YuukiTest < Minitest::Test
   def setup
     @instance = TestClass.new
     @yuuki = Yuuki::Caller.new(@instance)
