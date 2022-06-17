@@ -87,7 +87,7 @@ class UsaminTest < Minitest::Test
   end
 
   def test_tag_none
-    assert_raises(Yuuki::Error, 'tag `tag_none` is not associated'){@yuuki.run_tag(:tag_none)}
+    assert_raises(Yuuki::Error, 'tag `tag_none` is not associated') {@yuuki.run_tag(:tag_none)}
     assert_equal(@instance.test, [])
   end
 

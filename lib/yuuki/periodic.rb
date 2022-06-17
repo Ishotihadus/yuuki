@@ -59,18 +59,19 @@ module Yuuki
             next true if @first_run && meta[:first_run]
             next false unless meta[:periodic]
             next false unless last_time
+
             c = @current_time + gmtoff
             l = last_time + gmtoff
             next true if (l.div(meta[:periodic]) + 1) * meta[:periodic] <= c
           end
           run_select(select_proc, **args, &block)
-        rescue
+        rescue StandardError
           @on_error ? @on_error[$!] : raise
         end
         @first_run = false
 
         last_time = @current_time
-        ((@current_time + 1).floor - Time.now.to_f).tap{|e| sleep e if e > 0}
+        ((@current_time + 1).floor - Time.now.to_f).tap {|e| sleep e if e > 0}
       end
     end
   end
