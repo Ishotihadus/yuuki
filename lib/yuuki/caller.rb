@@ -211,8 +211,8 @@ module Yuuki
       end
       params_block = block unless params.any? {|type, _| type == :block}
       params_hash.empty? ? method[*params_array, &params_block] : method[*params_array, **params_hash, &params_block]
+    ensure
+      yoshinon&.unlock
     end
-  ensure
-    yoshinon&.unlock if @use_yoshinon
   end
 end
