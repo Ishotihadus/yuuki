@@ -3,8 +3,8 @@
 # Classes
 module Yuuki
   module Runner
-    def periodic: (*Symbol method, Integer interval) -> void
-    def first_run: (*Symbol method, ?enabled: bool) -> void
+    def periodic: (*Symbol methods, Integer interval) -> void
+    def first_run: (*Symbol methods, ?enabled: bool) -> void
   end
 
   class PeriodicCaller < Caller
