@@ -90,7 +90,7 @@ module Yuuki
     end
 
     # runs all methods with the specified tags
-    # @param [Symbol] tags
+    # @param [Array<Symbol>] tags
     # @param [Object] args arguments
     def run_tag(*tags, **args, &)
       t = self.tags

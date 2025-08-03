@@ -8,7 +8,7 @@ require 'yoshinon'
 module Yuuki
   module Runner
     # sets interval to the method
-    # @param [Symbol] methods method names
+    # @param [Array<Symbol>] methods method names
     # @param [Integer] interval
     def periodic(*methods, interval)
       @yuuki_methods ||= {}
@@ -19,7 +19,7 @@ module Yuuki
     end
 
     # sets whether the method run at the first time
-    # @param [Symbol] methods method names
+    # @param [Array<Symbol>] methods method names
     # @param [Boolean] enabled
     def first_run(*methods, enabled: true)
       @yuuki_methods ||= {}

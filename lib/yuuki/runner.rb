@@ -9,7 +9,7 @@ module Yuuki
     end
 
     # adds methods to yuuki
-    # @param [Symbol] methods method names
+    # @param [Array<Symbol>] methods method names
     def add(*methods)
       @yuuki_methods ||= {}
       methods.each do |method|
@@ -19,7 +19,7 @@ module Yuuki
     end
 
     # deletes methods from yuuki
-    # @param [Symbol] methods method names
+    # @param [Array<Symbol>] methods method names
     def delete(*methods)
       @yuuki_methods ||= {}
       methods.each do |method|
@@ -30,7 +30,7 @@ module Yuuki
 
     # adds tags to the method
     # @param [Symbol] method method name
-    # @param [Symbol] tags tag names
+    # @param [Array<Symbol>] tags tag names
     def tag(method, *tags)
       @yuuki_methods ||= {}
       @yuuki_methods[method] ||= {}
@@ -39,7 +39,7 @@ module Yuuki
     end
 
     # enables threading for the methods
-    # @param [Symbol] methods method names
+    # @param [Array<Symbol>] methods method names
     # @param [Boolean] enabled
     def thread(*methods, enabled: true)
       @yuuki_methods ||= {}
@@ -50,7 +50,7 @@ module Yuuki
     end
 
     # sets priority to the method
-    # @param [Symbol] methods method names
+    # @param [Array<Symbol>] methods method names
     # @param [Numeric] value
     def priority(*methods, value)
       @yuuki_methods ||= {}
