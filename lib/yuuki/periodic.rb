@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'English'
 require 'yuuki/caller'
 require 'yuuki/runner'
 require 'yoshinon'
@@ -51,7 +52,7 @@ module Yuuki
     # runs the periodic caller
     # @param [Numeric] gmtoff GMT Offset
     # @param [Object] args arguments
-    def run(gmtoff = Time.now.gmtoff, **args, &block)
+    def run(gmtoff = Time.now.gmtoff, **args, &)
       last_time = nil
       loop do
         @current_time = Time.now.to_f
@@ -65,14 +66,14 @@ module Yuuki
             l = last_time + gmtoff
             (l.div(meta[:periodic]) + 1) * meta[:periodic] <= c
           end
-          run_select(select_proc, **args, &block)
+          run_select(select_proc, **args, &)
         rescue StandardError
-          @on_error ? @on_error[$!] : raise
+          @on_error ? @on_error[$ERROR_INFO] : raise
         end
         @first_run = false
 
         last_time = @current_time
-        ((@current_time + 1).floor - Time.now.to_f).tap {|e| sleep e if e > 0}
+        ((@current_time + 1).floor - Time.now.to_f).tap { |e| sleep e if e > 0 }
       end
     end
   end

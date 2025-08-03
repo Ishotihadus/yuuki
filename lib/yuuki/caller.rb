@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require 'set'
 require 'yuuki/runner'
 require 'yoshinon'
 
@@ -10,7 +9,7 @@ module Yuuki
     # @param [String] require_dir directory
     # @param [Boolean] recursive
     def self.require_dir(require_dir, recursive: false)
-      Dir.glob(recursive ? "#{require_dir}/**/*.rb" : "#{require_dir}/*.rb").sort.each {|file| require file}
+      Dir.glob(recursive ? "#{require_dir}/**/*.rb" : "#{require_dir}/*.rb").each { |file| require file }
     end
 
     # @param [Object] instances
@@ -56,33 +55,33 @@ module Yuuki
     def runners
       list = @instances.flat_map do |instance|
         methods = instance.class.instance_variable_get(:@yuuki_methods)
-        methods.select {|_sig, meta| meta[:enabled]}.map {|sig, meta| [instance.method(sig), meta]}
+        methods.select { |_sig, meta| meta[:enabled] }.map { |sig, meta| [instance.method(sig), meta] }
       end
-      list.sort_by {|_method, meta| -(meta[:priority] || 0)}
+      list.sort_by { |_method, meta| -(meta[:priority] || 0) }
     end
 
     # returns all tags defined as Set
     def tags
       tags = @instances.flat_map do |instance|
         methods = instance.class.instance_variable_get(:@yuuki_methods)
-        methods.select {|_sig, meta| meta[:enabled]}.flat_map {|_sig, meta| meta[:tags]}
+        methods.select { |_sig, meta| meta[:enabled] }.flat_map { |_sig, meta| meta[:tags] }
       end
       ret = Set.new
-      tags.each {|e| ret += e if e}
+      tags.each { |e| ret += e if e }
       ret
     end
 
     # runs all methods
     # @param [Object] args arguments
-    def run(**args, &block)
-      run_internal(runners, args, &block)
+    def run(**args, &)
+      run_internal(runners, args, &)
     end
 
     # runs all selected methods
     # @param [Proc] proc_select
     # @param [Object] args arguments
-    def run_select(proc_select, **args, &block)
-      run_internal(runners.select(&proc_select), args, &block)
+    def run_select(proc_select, **args, &)
+      run_internal(runners.select(&proc_select), args, &)
     end
 
     # set whether to ignore ``tag not associated'' error
@@ -93,7 +92,7 @@ module Yuuki
     # runs all methods with the specified tags
     # @param [Symbol] tags
     # @param [Object] args arguments
-    def run_tag(*tags, **args, &block)
+    def run_tag(*tags, **args, &)
       t = self.tags
       tags.each do |e|
         next if t.include?(e)
@@ -101,20 +100,20 @@ module Yuuki
 
         warn "Yuuki Warning: tag `#{e}` is not associated"
       end
-      run_select(proc {|_method, meta| meta[:tags]&.intersect?(tags)}, **args, &block)
+      run_select(proc { |_method, meta| meta[:tags]&.intersect?(tags) }, **args, &)
     end
 
     # runs the specific method
     # @param [Class, nil] klass
     # @param [Symbol, nil] method_sig method name
     # @param [Object] args arguments
-    def run_method(klass, method_sig, **args, &block)
+    def run_method(klass, method_sig, **args, &)
       select_proc = proc do |method, _meta|
         flag_klass = klass ? method.receiver.instance_of?(klass) : true
         flag_method = method_sig ? method.name == method_sig : true
         flag_klass && flag_method
       end
-      run_select(select_proc, **args, &block)
+      run_select(select_proc, **args, &)
     end
 
     # joins all runnning threads
@@ -171,8 +170,8 @@ module Yuuki
 
           if nonspecified_last_opt
             # if there already exist non-specified :opt arguments, no more specified :opt argument is allowed
-            raise Yuuki::Error, "A required argument '#{nonspecified_last_opt}' was not found"\
-                    " on running #{method.owner}::#{method.name}"" with optional argument '#{name}'"
+            raise Yuuki::Error, "A required argument '#{nonspecified_last_opt}' was not found " \
+                                "on running #{method.owner}::#{method.name}" + " with optional argument '#{name}'"
           end
           params_array << args[name]
         when :rest
@@ -180,8 +179,8 @@ module Yuuki
 
           if nonspecified_last_opt
             # if there already exist non-specified :opt arguments, the :rest argument cannot be handled
-            raise Yuuki::Error, "A required argument '#{nonspecified_last_opt}' not found"\
-                    " on running #{method.owner}::#{method.name}"" with rest argument '#{name}'"
+            raise Yuuki::Error, "A required argument '#{nonspecified_last_opt}' not found " \
+                                "on running #{method.owner}::#{method.name}" + " with rest argument '#{name}'"
           end
           if args[name].respond_to?(:to_ary)
             params_array += args[name]
@@ -209,7 +208,7 @@ module Yuuki
           params_block = args[name]
         end
       end
-      params_block = block unless params.any? {|type, _| type == :block}
+      params_block = block unless params.any? { |type, _| type == :block }
       params_hash.empty? ? method[*params_array, &params_block] : method[*params_array, **params_hash, &params_block]
     ensure
       yoshinon&.unlock

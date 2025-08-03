@@ -9,6 +9,6 @@ module Yuuki
     def delete: (*Symbol methods) -> void
     def tag: (Symbol method, *Symbol tags) -> void
     def thread: (*Symbol methods, ?enabled: bool) -> void
-    def priority: (*Symbol methods, Numeric priority) -> void
+    def priority: (*Symbol methods, Numeric value) -> void
   end
 end

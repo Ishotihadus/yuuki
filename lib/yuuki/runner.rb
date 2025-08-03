@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
-require 'set'
-
 module Yuuki
   module Runner
+    def self.extended(base)
+      base.define_method(:yuuki) do
+        @yuuki
+      end
+    end
+
     # adds methods to yuuki
     # @param [Symbol] methods method names
     def add(*methods)
@@ -47,12 +51,12 @@ module Yuuki
 
     # sets priority to the method
     # @param [Symbol] methods method names
-    # @param [Numeric] priority
-    def priority(*methods, priority)
+    # @param [Numeric] value
+    def priority(*methods, value)
       @yuuki_methods ||= {}
       methods.each do |method|
         @yuuki_methods[method] ||= {}
-        @yuuki_methods[method][:priority] = priority
+        @yuuki_methods[method][:priority] = value
       end
     end
   end
