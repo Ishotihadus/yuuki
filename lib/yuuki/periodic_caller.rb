@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
+require 'yoshinon'
 require 'yuuki/caller'
 require 'yuuki/runner'
-require 'yoshinon'
 
 module Yuuki
   class PeriodicCaller < Caller
@@ -17,7 +17,7 @@ module Yuuki
       @on_error = block
     end
 
-    def run(gmtoff = Time.now.gmtoff, **args, &)
+    def run(gmtoff = Time.now.gmtoff, **args, &block)
       last_time = nil
       loop do
         @current_time = Time.now.to_f
@@ -34,7 +34,7 @@ module Yuuki
             l = last_time + gmtoff
             (l.div(meta[:periodic]) + 1) * meta[:periodic] <= c
           end
-          run_select(selector, **args, &)
+          run_select(selector, **args, &block)
         rescue StandardError
           @on_error ? @on_error[$!] : raise
         end

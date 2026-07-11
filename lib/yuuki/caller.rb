@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require 'yuuki/runner'
+require 'set'
 require 'yoshinon'
+require 'yuuki/runner'
 
 module Yuuki
   class Caller
@@ -47,15 +48,15 @@ module Yuuki
       list
     end
 
-    def run(*tags, **args, &)
+    def run(*tags, **args, &block)
       selector = proc do |_method, meta|
-        meta[:tags]&.intersect?(tags)
+        meta[:tags] && !(meta[:tags] & tags).empty?
       end
-      run_select(selector, **args, &)
+      run_select(selector, **args, &block)
     end
 
-    def run_select(selector, **args, &)
-      run_internal(methods.select(&selector), args, &)
+    def run_select(selector, **args, &block)
+      run_internal(methods.select(&selector), args, &block)
     end
 
     def join
@@ -101,7 +102,10 @@ module Yuuki
       params.each do |type, name|
         case type
         when :req
-          raise Yuuki::Error, "A required argument '#{name}' was not found on running #{method.owner}::#{method.name}" unless args.key?(name)
+          unless args.key?(name)
+            raise Yuuki::Error,
+                  "A required argument '#{name}' was not found on running #{method.owner}::#{method.name}"
+          end
 
           params_array << args[name]
         when :opt
