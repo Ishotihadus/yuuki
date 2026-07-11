@@ -5,14 +5,10 @@ require 'yoshinon'
 
 module Yuuki
   class Caller
-    # requires all the rb files in the given directory
-    # @param [String] require_dir directory
-    # @param [Boolean] recursive
     def self.require_dir(require_dir, recursive: false)
       Dir.glob(recursive ? "#{require_dir}/**/*.rb" : "#{require_dir}/*.rb").each { |file| require file }
     end
 
-    # @param [Object] instances
     def initialize(*instances, use_yoshinon: true)
       @instances = Set.new
       @threads = []
@@ -20,110 +16,53 @@ module Yuuki
       @use_yoshinon = use_yoshinon
     end
 
-    # adds instances to yuuki
-    # @param [Object] instances
     def add(*instances)
       instances.each do |instance|
-        # create instance if class is given
         if instance.is_a?(Class)
           klass = instance
-          # check the klass is extended
-          unless klass.singleton_class.include?(Yuuki::Runner)
-            raise Yuuki::Error, 'Runner instance must be extend Yuuki::Runner'
-          end
+          raise Yuuki::Error, 'Runner instance must be inherit Yuuki::Runner' unless klass < Yuuki::Runner
 
+          # allocate + explicit initialize so that @yuuki is already set when
+          # the runner's #initialize runs
           instance = instance.allocate
           instance.instance_variable_set(:@yuuki, self)
           instance.send(:initialize)
         else
-          # check the klass is extended
-          unless instance.class.singleton_class.include?(Yuuki::Runner)
-            raise Yuuki::Error, 'Runner instance must be extend Yuuki::Runner'
-          end
+          raise Yuuki::Error, 'Runner instance must be inherit Yuuki::Runner' unless instance.is_a?(Yuuki::Runner)
 
-          # add @yuuki to the instance
           instance.instance_variable_set(:@yuuki, self)
         end
-
-        # regist
         @instances << instance
       end
     end
 
-    # returns runners
-    # @return [Array<[Method, Hash<Symbol, Object>]>]
-    def runners
+    # NOTE: intentionally shadows Object#methods; returns [Method, meta] pairs
+    # sorted by priority (highest first)
+    def methods
       list = @instances.flat_map do |instance|
-        methods = instance.class.instance_variable_get(:@yuuki_methods)
-        methods.select { |_sig, meta| meta[:enabled] }.map { |sig, meta| [instance.method(sig), meta] }
+        methods = instance.class.yuuki_methods
+        methods.map { |sig, meta| [instance.method(sig), meta] }
       end
-      list.sort_by { |_method, meta| -(meta[:priority] || 0) }
+      list.sort_by! { |_method, meta| -(meta[:priority] || 0) }
+      list
     end
 
-    # returns all tags defined as Set
-    def tags
-      tags = @instances.flat_map do |instance|
-        methods = instance.class.instance_variable_get(:@yuuki_methods)
-        methods.select { |_sig, meta| meta[:enabled] }.flat_map { |_sig, meta| meta[:tags] }
+    def run(*tags, **args, &)
+      selector = proc do |_method, meta|
+        meta[:tags]&.intersect?(tags)
       end
-      ret = Set.new
-      tags.each { |e| ret += e if e }
-      ret
+      run_select(selector, **args, &)
     end
 
-    # runs all methods
-    # @param [Object] args arguments
-    def run(**args, &)
-      run_internal(runners, args, &)
+    def run_select(selector, **args, &)
+      run_internal(methods.select(&selector), args, &)
     end
 
-    # runs all selected methods
-    # @param [Proc] proc_select
-    # @param [Object] args arguments
-    def run_select(proc_select, **args, &)
-      run_internal(runners.select(&proc_select), args, &)
-    end
-
-    # set whether to ignore ``tag not associated'' error
-    def ignore_tag_error(enabled: true)
-      @ignore_tag_error = enabled
-    end
-
-    # runs all methods with the specified tags
-    # @param [Array<Symbol>] tags
-    # @param [Object] args arguments
-    def run_tag(*tags, **args, &)
-      t = self.tags
-      tags.each do |e|
-        next if t.include?(e)
-        raise Yuuki::Error, "tag `#{e}` is not associated" unless @ignore_tag_error
-
-        warn "Yuuki Warning: tag `#{e}` is not associated"
-      end
-      run_select(proc { |_method, meta| meta[:tags]&.intersect?(tags) }, **args, &)
-    end
-
-    # runs the specific method
-    # @param [Class, nil] klass
-    # @param [Symbol, nil] method_sig method name
-    # @param [Object] args arguments
-    def run_method(klass, method_sig, **args, &)
-      select_proc = proc do |method, _meta|
-        flag_klass = klass ? method.receiver.instance_of?(klass) : true
-        flag_method = method_sig ? method.name == method_sig : true
-        flag_klass && flag_method
-      end
-      run_select(select_proc, **args, &)
-    end
-
-    # joins all runnning threads
     def join
       @threads.each(&:join)
       @threads.select!(&:alive?)
     end
 
-    # returns whether any thread is alive
-    # @return [Boolean]
     def alive?
       @threads.select!(&:alive?)
       !@threads.empty?
@@ -147,10 +86,13 @@ module Yuuki
       end
     end
 
+    # Maps the args hash onto the method's parameters by name. Positional
+    # optionals can only be filled left-to-right: once one is unspecified,
+    # passing any later :opt/:rest argument is an error (nonspecified_last_opt).
     def run_method_internal(method, args, &block)
       yoshinon = Yoshinon.lock if @use_yoshinon
       params = method.parameters
-      return method[] if params.empty?
+      return method[&block] if params.empty?
 
       params_array = []
       params_hash = {}
@@ -159,9 +101,7 @@ module Yuuki
       params.each do |type, name|
         case type
         when :req
-          unless args.key?(name)
-            raise Yuuki::Error, "A required argument '#{name}' was not found on running #{method.owner}::#{method.name}"
-          end
+          raise Yuuki::Error, "A required argument '#{name}' was not found on running #{method.owner}::#{method.name}" unless args.key?(name)
 
           params_array << args[name]
         when :opt
@@ -205,10 +145,11 @@ module Yuuki
             params_hash[name] = args[name]
           end
         when :block
-          params_block = args[name]
+          params_block = args[name] if args.key?(name)
         end
       end
-      params_block = block unless params.any? { |type, _| type == :block }
+      # fall back to the block passed to run unless one was explicitly given via args
+      params_block = block unless params.any? { |type, name| type == :block && args.key?(name) }
       params_hash.empty? ? method[*params_array, &params_block] : method[*params_array, **params_hash, &params_block]
     ensure
       yoshinon&.unlock

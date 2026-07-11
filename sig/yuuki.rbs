@@ -1,0 +1,10 @@
+module Yuuki
+  # metadata registered for a runner method (see Runner.method_added)
+  type meta = {
+    ?tags: Array[Symbol],
+    ?priority: Integer,
+    ?thread: bool,
+    ?periodic: Numeric,
+    ?first_run: bool
+  }
+end

@@ -1,25 +1,43 @@
-# TypeProf 0.21.2
-
-# Classes
 module Yuuki
   class Caller
-    @instances: Set[untyped]
+    # a runner method paired with its registered metadata
+    type runner_entry = [Method, meta]
+
+    type selector = ^(Method, meta) -> boolish
+
+    @instances: Set[Runner]
+
     @threads: Array[Thread]
 
+    @use_yoshinon: bool
+
     def self.require_dir: (String require_dir, ?recursive: bool) -> void
-    def initialize: (*untyped instances) -> void
-    def add: (*untyped instances) -> void
-    def runners: -> Array[untyped]
-    def run: (**untyped) -> void
-    def run_select: (^(Method, Hash[Symbol, untyped]) -> bool proc_select, **untyped) -> void
-    def run_tag: (*Symbol tags, **untyped) -> void
-    def run_method: (Class klass, Symbol method_sig, **untyped) -> void
-    def join: -> void
-    def alive?: -> bool
+
+    def initialize: (*(Runner | Class) instances, ?use_yoshinon: bool) -> void
+
+    def add: (*(Runner | Class) instances) -> void
+
+    # NOTE: intentionally shadows Object#methods; returns [Method, meta] pairs
+    # sorted by priority (highest first)
+    def methods: () -> Array[runner_entry]
+
+    def run: (*Symbol tags, **untyped args) ?{ (?) -> untyped } -> void
+
+    def run_select: (selector selector, **untyped args) ?{ (?) -> untyped } -> void
+
+    def join: () -> void
+
+    def alive?: () -> bool
+
     alias running? alive?
 
     private
-    def run_internal: (Array[untyped] runners, Hash[Symbol, untyped] args) -> void
-    def run_method_internal: (Method method, Hash[Symbol, untyped] args) -> void
+
+    def run_internal: (Array[runner_entry] runners, Hash[Symbol, untyped] args) ?{ (?) -> untyped } -> void
+
+    # Maps the args hash onto the method's parameters by name. Positional
+    # optionals can only be filled left-to-right: once one is unspecified,
+    # passing any later :opt/:rest argument is an error (nonspecified_last_opt).
+    def run_method_internal: (Method method, Hash[Symbol, untyped] args) ?{ (?) -> untyped } -> untyped
   end
 end

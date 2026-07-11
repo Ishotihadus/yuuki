@@ -1,0 +1,18 @@
+module Yuuki
+  class PeriodicCaller < Caller
+    @on_error: (^(StandardError) -> untyped)?
+
+    # true until the first iteration of #run has finished
+    attr_reader first_run: bool
+
+    # epoch seconds of the current iteration; nil before #run is called
+    attr_reader current_time: Float?
+
+    def initialize: (*(Runner | Class) instances, ?use_yoshinon: bool) -> void
+
+    def on_error: () { (StandardError) -> untyped } -> void
+
+    # loops forever; only returns by raising (when no on_error callback is set)
+    def run: (?Integer gmtoff, **untyped args) ?{ (?) -> untyped } -> bot
+  end
+end

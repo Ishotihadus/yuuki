@@ -1,14 +1,44 @@
-# TypeProf 0.21.2
-
-# Classes
 module Yuuki
-  module Runner
-    @yuuki_methods: Hash[Symbol, Hash[Symbol, untyped]]
+  class Runner
+    # a decorator entry: [:tag, Symbol] | [:priority, Integer] | [:thread, bool]
+    #                  | [:periodic, Numeric] | [:first_run, bool]
+    type decorator = [Symbol, untyped]
 
-    def add: (*Symbol methods) -> void
-    def delete: (*Symbol methods) -> void
-    def tag: (Symbol method, *Symbol tags) -> void
-    def thread: (*Symbol methods, ?enabled: bool) -> void
-    def priority: (*Symbol methods, Numeric value) -> void
+    self.@accumulated_decorators: Array[decorator]
+
+    self.@yuuki_methods: Hash[Symbol, meta]
+
+    attr_reader yuuki: Caller?
+
+    # Decorator-style DSL (`on` / `priority` / `thread` / `periodic` / `first_run`)
+    # pushes entries here; the next instance-method definition consumes them
+    # (see method_added). Both this and yuuki_methods live in per-class ivars.
+    def self.accumulated_decorators: () -> Array[decorator]
+
+    def self.yuuki_methods: () -> Hash[Symbol, meta]
+
+    # yuuki_methods is a per-class ivar, so copy it on inheritance to make
+    # runner methods defined in a superclass visible from the subclass.
+    # NOTE: methods added to the superclass after the subclass is defined are
+    # not reflected.
+    def self.inherited: (singleton(Runner) subclass) -> void
+
+    def self.on: (Symbol tag) -> void
+
+    def self.priority: (?Integer priority) -> void
+
+    def self.thread: (?enabled: bool) -> void
+
+    def self.periodic: (Numeric interval) -> void
+
+    def self.first_run: (?enabled: bool) -> void
+
+    # Registers the method as a runner method when decorators are pending or the
+    # name is `on_<tag>` (which implies the tag <tag>). Note this hook fires for
+    # ANY instance-method definition, including attr_* and private helpers, so
+    # pending decorators are consumed by whatever method comes next.
+    def self.method_added: (Symbol method_name) -> void
+
+    def self.singleton_method_added: (Symbol _method_name) -> void
   end
 end
