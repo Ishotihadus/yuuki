@@ -17,7 +17,7 @@ module Yuuki
       @on_error = block
     end
 
-    def run(gmtoff = Time.now.gmtoff, **args, &block)
+    def start(gmtoff = Time.now.gmtoff, **args, &block)
       last_time = nil
       loop do
         @current_time = Time.now.to_f
