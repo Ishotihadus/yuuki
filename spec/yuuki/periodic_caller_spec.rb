@@ -4,7 +4,7 @@ require 'yuuki/periodic_caller'
 
 RSpec.describe Yuuki::PeriodicCaller do
   def run_in_thread(periodic_caller, **args)
-    thread = Thread.new { periodic_caller.run(**args) }
+    thread = Thread.new { periodic_caller.start(**args) }
     yield thread
   ensure
     thread.kill
@@ -81,7 +81,7 @@ RSpec.describe Yuuki::PeriodicCaller do
 
     it 'raises when no callback is set' do
       periodic_caller = described_class.new(klass, use_yoshinon: false)
-      expect { periodic_caller.run }.to raise_error(RuntimeError, 'boom')
+      expect { periodic_caller.start }.to raise_error(RuntimeError, 'boom')
     end
   end
 end
